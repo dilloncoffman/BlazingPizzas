@@ -17,17 +17,21 @@
             }
         }
     </ul>
+    @if (showingConfigureDialog)
+    {
+        <ConfigurePizzaDialog Pizza="configuringPizza" 
+        OnCancel="CancelConfigurePizzaDialog" 
+        OnConfirm="ConfirmConfigurePizzaDialog" />
+    }
 </div>
 
-@if (showingConfigureDialog)
-{
-    <ConfigurePizzaDialog Pizza="configuringPizza" />
-}
+
 
 @code {
   List<PizzaSpecial> specials;
   Pizza configuringPizza;
   bool showingConfigureDialog;
+  Order order = new Order();
 
   protected override async Task OnInitializedAsync()
   {
@@ -45,5 +49,19 @@
     };
 
     showingConfigureDialog = true;
+  }
+
+  void CancelConfigurePizzaDialog()
+  {
+    configuringPizza = null;
+    showingConfigureDialog = false;
+  }
+  
+  void ConfirmConfigurePizzaDialog()
+  {
+      order.Pizzas.Add(configuringPizza);
+      configuringPizza = null;
+
+      showingConfigureDialog = false;
   }
 }
