@@ -1,5 +1,8 @@
 ﻿@page "/"
 @inject HttpClient HttpClient
+@* The NavigationManager lets you interact with URIs and navigation state. It has methods to get the current URL, to navigate to a different one, and more. *@
+@inject NavigationManager NavigationManager
+
 
 <div class="main">
     <ul class="pizza-cards">
@@ -53,51 +56,53 @@
 
 
 @code {
-  List<PizzaSpecial> specials;
-  Pizza configuringPizza;
-  bool showingConfigureDialog;
-  Order order = new Order();
+    List<PizzaSpecial> specials;
+    Pizza configuringPizza;
+    bool showingConfigureDialog;
+    Order order = new Order();
 
-  protected override async Task OnInitializedAsync()
-  {
-    specials = await HttpClient.GetFromJsonAsync<List<PizzaSpecial>>("specials");
-  }
-
-  void ShowConfigurePizzaDialog(PizzaSpecial special)
-  {
-    configuringPizza = new Pizza()
+    protected override async Task OnInitializedAsync()
     {
-      Special = special,
-      SpecialId = special.Id,
-      Size = Pizza.DefaultSize,
-      Toppings = new List<PizzaTopping>(),
-    };
+      specials = await HttpClient.GetFromJsonAsync<List<PizzaSpecial>>("specials");
+    }
 
-    showingConfigureDialog = true;
-  }
+    void ShowConfigurePizzaDialog(PizzaSpecial special)
+    {
+      configuringPizza = new Pizza()
+      {
+    Special = special,
+    SpecialId = special.Id,
+    Size = Pizza.DefaultSize,
+    Toppings = new List<PizzaTopping>(),
+      };
 
-  void CancelConfigurePizzaDialog()
-  {
-    configuringPizza = null;
-    showingConfigureDialog = false;
-  }
+      showingConfigureDialog = true;
+    }
 
-  void ConfirmConfigurePizzaDialog()
-  {
+    void CancelConfigurePizzaDialog()
+    {
+      configuringPizza = null;
+      showingConfigureDialog = false;
+    }
+
+    void ConfirmConfigurePizzaDialog()
+    {
       order.Pizzas.Add(configuringPizza);
       configuringPizza = null;
 
       showingConfigureDialog = false;
-  }
+    }
 
-  void RemoveConfiguredPizza(Pizza pizza)
-  {
+    void RemoveConfiguredPizza(Pizza pizza)
+    {
       order.Pizzas.Remove(pizza);
-  }
+    }
 
-  async Task PlaceOrder()
-  {
-      await HttpClient.PostAsJsonAsync("orders", order);
+    async Task PlaceOrder()
+    {
+      var response = await HttpClient.PostAsJsonAsync("orders", order);
+      var newOrderId = await response.Content.ReadFromJsonAsync<int>();
       order = new Order();
-  }
+      NavigationManager.NavigateTo($"myorders/{newOrderId}");
+    }
 }
